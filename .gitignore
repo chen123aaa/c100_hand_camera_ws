@@ -7,10 +7,6 @@ log/
 __pycache__/
 *.py[cod]
 
-# Runtime captures
-captures/*
-!captures/.gitkeep
-
 # Local calibration outputs
 calibration/*
 !calibration/.gitkeep
