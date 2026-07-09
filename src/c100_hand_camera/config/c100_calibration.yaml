@@ -1,0 +1,15 @@
+c100_calibration_node:
+  ros__parameters:
+    image_topic: "/c100_hand_camera/image_raw"
+
+    # Vendor calibration board from the C100 package: 9x6 inner corners, 25mm square.
+    board_cols: 9
+    board_rows: 6
+    square_size_m: 0.025
+
+    # Move the board between manual samples. 20-30 samples are recommended by the vendor guide.
+    target_samples: 25
+
+    output_path: "calibration/c100_hand_camera_calibrated.yaml"
+    shutdown_on_complete: false
+    log_every_n_frames: 30

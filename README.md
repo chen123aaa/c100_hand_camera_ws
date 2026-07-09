@@ -57,6 +57,85 @@ c100_hand_camera_link
 src/c100_hand_camera/config/c100_hand_camera.yaml
 ```
 
+## 标定
+
+标定节点参照原厂标定程序的 OpenCV 棋盘格流程实现：
+
+```text
+ROS 图像 topic
+-> cv2.findChessboardCorners()
+-> cv2.cornerSubPix()
+-> cv2.calibrateCamera()
+-> 输出 camera_matrix / distortion_coefficients
+```
+
+先启动 C100 图像发布节点：
+
+```bash
+ros2 launch c100_hand_camera c100_hand_camera.launch.py device:=/dev/video2
+```
+
+另开一个终端，进入工作空间并 source：
+
+```bash
+cd /home/raybot/c100_hand_camera_ws
+source install/setup.bash
+```
+
+启动标定节点：
+
+```bash
+ros2 launch c100_hand_camera c100_calibration.launch.py
+```
+
+默认订阅：
+
+```text
+/c100_hand_camera/image_raw
+```
+
+默认标定板参数来自资料包：
+
+```text
+内角点: 9x6
+方格尺寸: 25mm
+采样数量: 25
+```
+
+标定时移动棋盘格，让它出现在画面中不同位置和角度。节点检测到棋盘格后，用 ROS service 手动采集当前样本。
+
+手动采集一帧：
+
+```bash
+ros2 service call /c100_calibration/capture_sample std_srvs/srv/Trigger {}
+```
+
+如果想在采够默认样本数前提前计算：
+
+```bash
+ros2 service call /c100_calibration/calibrate std_srvs/srv/Trigger {}
+```
+
+重新开始采集：
+
+```bash
+ros2 service call /c100_calibration/reset std_srvs/srv/Trigger {}
+```
+
+采够样本后节点会计算并保存：
+
+```text
+calibration/c100_hand_camera_calibrated.yaml
+```
+
+如果要改采样数量或输出路径：
+
+```bash
+ros2 launch c100_hand_camera c100_calibration.launch.py target_samples:=30 output_path:=calibration/c100_640x480.yaml
+```
+
+生成的 YAML 可以用来更新 `src/c100_hand_camera/config/c100_hand_camera.yaml` 里的 `camera_matrix` 和 `distortion_coefficients`。
+
 ## 默认内参和畸变
 
 当前先使用资料包里的 C100 参考参数，分辨率为 `640x480`。
