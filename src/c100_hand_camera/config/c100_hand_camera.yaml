@@ -1,0 +1,25 @@
+c100_hand_camera_node:
+  ros__parameters:
+    device: ""
+    width: 640
+    height: 480
+    fps: 30.0
+    use_mjpeg: true
+    frame_id: "c100_hand_camera_link"
+    image_topic: "/c100_hand_camera/image_raw"
+    camera_info_topic: "/c100_hand_camera/camera_info"
+
+    # Vendor C100 reference intrinsics for 640x480. Recalibrate before precision work.
+    camera_matrix:
+      [302.7048929342819, 0.0, 298.6791162335703,
+       0.0, 302.2019683382837, 234.9714757570849,
+       0.0, 0.0, 1.0]
+
+    # Vendor tutorial example distortion coefficients: k1, k2, p1, p2, k3.
+    distortion_model: "plumb_bob"
+    distortion_coefficients:
+      [0.0615721521591663,
+       0.09610650401456461,
+       0.0004141072132062723,
+       0.0008935300620624921,
+       0.02529521259640314]

@@ -1,0 +1,23 @@
+# ROS2 build outputs
+build/
+install/
+log/
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Runtime captures
+captures/*
+!captures/.gitkeep
+
+# Local calibration outputs
+calibration/*
+!calibration/.gitkeep
+
+# Editor and OS files
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
