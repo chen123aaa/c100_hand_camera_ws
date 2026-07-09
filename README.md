@@ -94,6 +94,14 @@ ros2 launch c100_hand_camera c100_calibration.launch.py
 /c100_hand_camera/image_raw
 ```
 
+标定调试图像：
+
+```text
+/c100_calibration/debug_image
+```
+
+这个话题参照原厂源码的 `cv2.drawChessboardCorners()`，检测到棋盘格时会在图像上画出角点和连线；未检测到时会发布带状态文字的原图。
+
 默认标定板参数来自资料包：
 
 ```text
@@ -185,4 +193,10 @@ ros2 topic echo /c100_hand_camera/camera_info --once
 
 ```bash
 ros2 topic echo /c100_hand_camera/image_raw --once --field header
+```
+
+查看标定调试图像消息头：
+
+```bash
+ros2 topic echo /c100_calibration/debug_image --once --field header
 ```

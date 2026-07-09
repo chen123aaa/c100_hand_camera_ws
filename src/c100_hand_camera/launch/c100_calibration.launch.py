@@ -24,6 +24,11 @@ def generate_launch_description():
         default_value='calibration/c100_hand_camera_calibrated.yaml',
         description='Calibration YAML output path.',
     )
+    debug_image_topic_arg = DeclareLaunchArgument(
+        'debug_image_topic',
+        default_value='/c100_calibration/debug_image',
+        description='Annotated calibration debug image topic.',
+    )
 
     target_samples_arg = DeclareLaunchArgument(
         'target_samples',
@@ -33,6 +38,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         image_topic_arg,
+        debug_image_topic_arg,
         output_path_arg,
         target_samples_arg,
         Node(
@@ -44,6 +50,7 @@ def generate_launch_description():
                 config_file,
                 {
                     'image_topic': LaunchConfiguration('image_topic'),
+                    'debug_image_topic': LaunchConfiguration('debug_image_topic'),
                     'output_path': LaunchConfiguration('output_path'),
                     'target_samples': ParameterValue(
                         LaunchConfiguration('target_samples'),

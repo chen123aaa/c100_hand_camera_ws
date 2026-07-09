@@ -1,6 +1,7 @@
 c100_calibration_node:
   ros__parameters:
     image_topic: "/c100_hand_camera/image_raw"
+    debug_image_topic: "/c100_calibration/debug_image"
 
     # Vendor calibration board from the C100 package: 9x6 inner corners, 25mm square.
     board_cols: 9

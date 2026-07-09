@@ -22,6 +22,7 @@ class C100CalibrationNode(Node):
         super().__init__('c100_calibration_node')
 
         self.declare_parameter('image_topic', '/c100_hand_camera/image_raw')
+        self.declare_parameter('debug_image_topic', '/c100_calibration/debug_image')
         self.declare_parameter('board_cols', 9)
         self.declare_parameter('board_rows', 6)
         self.declare_parameter('square_size_m', 0.025)
@@ -31,6 +32,7 @@ class C100CalibrationNode(Node):
         self.declare_parameter('log_every_n_frames', 30)
 
         self.image_topic = str(self.get_parameter('image_topic').value)
+        self.debug_image_topic = str(self.get_parameter('debug_image_topic').value)
         self.board_cols = int(self.get_parameter('board_cols').value)
         self.board_rows = int(self.get_parameter('board_rows').value)
         self.square_size_m = float(self.get_parameter('square_size_m').value)
@@ -63,6 +65,7 @@ class C100CalibrationNode(Node):
             self.image_callback,
             10,
         )
+        self.debug_image_pub = self.create_publisher(Image, self.debug_image_topic, 10)
         self.capture_service = self.create_service(
             Trigger,
             '/c100_calibration/capture_sample',
@@ -84,6 +87,7 @@ class C100CalibrationNode(Node):
             f'image_topic={self.image_topic}, board={self.board_cols}x{self.board_rows}, '
             f'square={self.square_size_m:.4f}m, target_samples={self.target_samples}'
         )
+        self.get_logger().info(f'Publishing calibration debug image: {self.debug_image_topic}')
         self.get_logger().info(
             'Move the chessboard through different positions and angles. '
             'Call /c100_calibration/capture_sample to capture the current detected chessboard.'
@@ -126,6 +130,7 @@ class C100CalibrationNode(Node):
         if not found:
             self.latest_corners = None
             self.latest_stamp = None
+            self._publish_debug_image(frame, msg, found=False, corners=None)
             if self.frame_count % self.log_every_n_frames == 0:
                 self.get_logger().info(
                     f'Waiting for {self.board_cols}x{self.board_rows} chessboard corners... '
@@ -142,12 +147,36 @@ class C100CalibrationNode(Node):
 
         self.latest_corners = corners.copy()
         self.latest_stamp = msg.header.stamp
+        self._publish_debug_image(frame, msg, found=True, corners=corners)
 
         if self.frame_count % self.log_every_n_frames == 0:
             self.get_logger().info(
                 f'Chessboard detected. Call capture_sample service to capture. '
                 f'samples={len(self.image_points)}/{self.target_samples}'
             )
+
+    def _publish_debug_image(self, frame: np.ndarray, source_msg: Image, found: bool, corners) -> None:
+        debug = frame.copy()
+        if found and corners is not None:
+            cv2.drawChessboardCorners(debug, self.pattern_size, corners, found)
+
+        status = 'FOUND' if found else 'SEARCHING'
+        text = f'{status} samples={len(self.image_points)}/{self.target_samples}'
+        color = (0, 255, 0) if found else (0, 165, 255)
+        cv2.putText(
+            debug,
+            text,
+            (12, 28),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.75,
+            color,
+            2,
+            cv2.LINE_AA,
+        )
+
+        debug_msg = self.bridge.cv2_to_imgmsg(debug, encoding='bgr8')
+        debug_msg.header = source_msg.header
+        self.debug_image_pub.publish(debug_msg)
 
     def capture_sample_callback(self, _request, response):
         success, message = self.capture_current_sample()
