@@ -31,7 +31,7 @@ ros2 run c100_hand_camera c100_detect_devices --probe
 把 `/dev/video2` 替换为检测到的 C100 设备：
 
 ```bash
-ros2 launch c100_hand_camera c100_hand_camera.launch.py device:=/dev/video2
+ros2 launch c100_hand_camera c100_hand_camera.launch.py device:=/dev/video0
 ```
 
 节点不接受空的 `device` 参数。不显式传入设备路径时会直接退出，避免误打开其他相机。
@@ -200,3 +200,51 @@ ros2 topic echo /c100_hand_camera/image_raw --once --field header
 ```bash
 ros2 topic echo /c100_calibration/debug_image --once --field header
 ```
+
+## AprilTag 36h11 检测测试
+
+当前检测脚本使用系统现有的 OpenCV ArUco/AprilTag 实现，不需要额外安装 Python AprilTag 包。先保持相机节点运行，再打开一个终端：
+
+```bash
+cd /home/raybot/c100_hand_camera_ws
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+```
+
+检测 `ID=0` 的 3cm 卡片：
+
+```bash
+ros2 launch c100_hand_camera c100_apriltag.launch.py target_id:=0 tag_size:=0.03
+```
+
+检测 `ID=0` 的 5cm 卡片时，需要停止上一个检测进程后改为：
+
+```bash
+ros2 launch c100_hand_camera c100_apriltag.launch.py target_id:=0 tag_size:=0.05
+```
+
+由于两张卡片都是 `ID=0`，检测器无法仅凭图案自动判断当前是 3cm 还是 5cm。`tag_size` 必须设置为当前放到相机前的那张卡片的实际黑色方框边长；尺寸设置错误会使输出位置按比例错误。不要让两张同 ID、不同尺寸的卡片同时出现在画面中。
+
+检测输出：
+
+```text
+/c100_apriltag/detection   JSON 文本，包含 ID、中心像素和相机坐标系位置
+/c100_apriltag/pose        geometry_msgs/PoseStamped
+/c100_apriltag/debug_image 带边框、坐标轴和距离的调试图像
+/tf                        c100_hand_camera_link -> apriltag_0
+```
+
+终端查看结果：
+
+```bash
+ros2 topic echo /c100_apriltag/detection
+ros2 topic echo /c100_apriltag/pose
+```
+
+查看标注图像：
+
+```bash
+rqt_image_view /c100_apriltag/debug_image
+```
+
+位姿精度依赖相机内参。当前工作空间使用的是 C100 的参考内参，只适合检测联调；做精确定位前应使用本机相机重新标定。

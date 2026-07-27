@@ -27,6 +27,7 @@ setup(
             'c100_hand_camera_node = c100_hand_camera.c100_hand_camera_node:main',
             'c100_detect_devices = c100_hand_camera.detect_devices:main',
             'c100_calibrate_camera = c100_hand_camera.calibrate_camera:main',
+            'c100_detect_apriltag = c100_hand_camera.c100_apriltag_detector_node:main',
         ],
     },
 )
